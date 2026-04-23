@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "nome": "App de Notas",
+    "descricao": "Organiza notas de estudo"
+  },
+  {
+    "id": 2,
+    "nome": "Bot de IA",
+    "descricao": "Bot que ensina IA"
+  }
+]
