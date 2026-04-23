@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "nome": "Pintura",
+    "descricao": "Pintar quadros"
+  },
+  {
+    "id": 2,
+    "nome": "Música",
+    "descricao": "Tocar piano"
+  }
+]
