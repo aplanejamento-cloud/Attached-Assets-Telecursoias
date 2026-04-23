@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "nome": "Advogado",
+    "descricao": "Profissional que atua no Direito"
+  },
+  {
+    "id": 2,
+    "nome": "Engenheiro Civil",
+    "descricao": "Projeta e constrói edifícios"
+  }
+]
