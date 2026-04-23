@@ -3,20 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Telecurso de IAs API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: ia
+  - name: videos
+  - name: missions
+  - name: stats
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +26,270 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /ia-profiles:
+    get:
+      operationId: listIaProfiles
+      tags: [ia]
+      summary: List all IA profiles
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of IA profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IaProfile"
+
+  /ia-profiles/{id}:
+    get:
+      operationId: getIaProfile
+      tags: [ia]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: IA profile detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IaProfile"
+        "404":
+          description: Not found
+
+  /ia-videos:
+    get:
+      operationId: listIaVideos
+      tags: [videos]
+      parameters:
+        - in: query
+          name: iaId
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of videos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IaVideo"
+
+  /ia-videos/{id}:
+    get:
+      operationId: getIaVideo
+      tags: [videos]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Video detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IaVideo"
+        "404":
+          description: Not found
+
+  /ia-missions:
+    get:
+      operationId: listIaMissions
+      tags: [missions]
+      parameters:
+        - in: query
+          name: iaId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Missions for the IA
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mission"
+
+  /ia-missions/{id}/status:
+    patch:
+      operationId: updateMissionStatus
+      tags: [missions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [todo, in_progress, done]
+              required: [status]
+      responses:
+        "200":
+          description: Updated mission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mission"
+
+  /stats/overview:
+    get:
+      operationId: getOverviewStats
+      tags: [stats]
+      summary: Aggregate stats for the home/feed
+      responses:
+        "200":
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverviewStats"
+
+  /stats/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [stats]
+      summary: Recently completed/started missions
+      responses:
+        "200":
+          description: Recent activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /stats/ia/{id}/progress:
+    get:
+      operationId: getIaProgress
+      tags: [stats]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: User progress on a single IA's missions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IaProgress"
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
+        status: { type: string }
+      required: [status]
+
+    IaProfile:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string }
+        tagline: { type: string }
+        description: { type: string }
+        avatarUrl: { type: string }
+        coverUrl: { type: string }
+        category: { type: string }
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        videoCount: { type: integer }
+        missionCount: { type: integer }
+        followerCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+      required: [id, name, type, tagline, description, avatarUrl, category, difficulty, videoCount, missionCount, followerCount, createdAt]
+
+    IaVideo:
+      type: object
+      properties:
+        id: { type: string }
+        iaId: { type: string }
+        iaName: { type: string }
+        title: { type: string }
+        description: { type: string }
+        thumbnailUrl: { type: string }
+        videoUrl: { type: string }
+        durationSeconds: { type: integer }
+        views: { type: integer }
+        publishedAt: { type: string, format: date-time }
+      required: [id, iaId, iaName, title, description, thumbnailUrl, videoUrl, durationSeconds, views, publishedAt]
+
+    Mission:
+      type: object
+      properties:
+        id: { type: string }
+        iaId: { type: string }
+        order: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        content: { type: string }
+        requirements:
+          type: array
+          items: { type: string }
+        rewardPoints: { type: integer }
         status:
           type: string
-      required:
-        - status
+          enum: [todo, in_progress, done]
+      required: [id, iaId, order, title, description, content, requirements, rewardPoints, status]
 
+    OverviewStats:
+      type: object
+      properties:
+        totalIas: { type: integer }
+        totalVideos: { type: integer }
+        totalMissions: { type: integer }
+        completedMissions: { type: integer }
+        totalPoints: { type: integer }
+        streakDays: { type: integer }
+      required: [totalIas, totalVideos, totalMissions, completedMissions, totalPoints, streakDays]
+
+    ActivityItem:
+      type: object
+      properties:
+        id: { type: string }
+        iaId: { type: string }
+        iaName: { type: string }
+        iaAvatarUrl: { type: string }
+        missionTitle: { type: string }
+        action:
+          type: string
+          enum: [started, completed]
+        at: { type: string, format: date-time }
+      required: [id, iaId, iaName, iaAvatarUrl, missionTitle, action, at]
+
+    IaProgress:
+      type: object
+      properties:
+        iaId: { type: string }
+        total: { type: integer }
+        done: { type: integer }
+        inProgress: { type: integer }
+        percentComplete: { type: number }
+        earnedPoints: { type: integer }
+      required: [iaId, total, done, inProgress, percentComplete, earnedPoints]

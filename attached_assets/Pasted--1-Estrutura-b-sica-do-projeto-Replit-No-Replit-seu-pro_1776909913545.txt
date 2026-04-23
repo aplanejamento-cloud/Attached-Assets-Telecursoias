@@ -1,0 +1,485 @@
+🧩 1. Estrutura básica do projeto (Replit)
+No Replit, seu projeto vai ficar assim:
+meu-app-ia
+├── backend
+│   ├── server.js
+│   ├── routes/iaRoutes.js
+│   ├── data/ia_profiles.json
+│   └── data/ia_videos.json
+├── frontend
+│   ├── index.html
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── pages/LoginPage.jsx
+│   ├── pages/FeedPage.jsx
+│   ├── pages/IaProfilePage.jsx
+│   ├── pages/VideoPage.jsx
+│   ├── pages/MissionsPage.jsx       ← Etapa 2
+│   └── components/
+│       ├── IaCard.jsx
+│       └── VideoCard.jsx
+├── package.json
+└── vite.config.js
+Primeiro eu entrego o backend (Node.js + Express). Depois o frontend (React + Vite). No final, te digo onde colar cada arquivo no Replit.
+💻 2. Backend (Node.js + Express)
+2.1 Arquivo backend/server.js
+// backend/server.js
+import express from 'express';
+import iaRoutes from './routes/iaRoutes.js';
+
+const app = express();
+app.use(express.json());
+app.use('/api', iaRoutes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor backend rodando na porta ${PORT}`);
+});
+2.2 Routes → backend/routes/iaRoutes.js
+// backend/routes/iaRoutes.js
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync, writeFileSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const DATA_DIR = join(__dirname, '../data');
+
+// PATHS
+const PROFILES_PATH = join(DATA_DIR, 'ia_profiles.json');
+const VIDEOS_PATH = join(DATA_DIR, 'ia_videos.json');
+
+// Helper
+function readJson(path) {
+  const raw = readFileSync(path, 'utf-8');
+  return JSON.parse(raw);
+}
+
+function writeJson(path, data) {
+  writeFileSync(path, JSON.stringify(data, null, 2));
+}
+
+// DADOS INICIAIS (exemplo)
+if (!import.meta.url.includes('__tests__')) {
+  try {
+    readFileSync(PROFILES_PATH);
+  } catch (e) {
+    writeJson(PROFILES_PATH, [
+      {
+        id: 'openclaw-01',
+        name: 'OpenClaw',
+        type: 'OpenClaw',
+        description: 'Agente de IA que roda em sua máquina e interage com APIs e sistemas externos.',
+        avatarUrl: 'https://img.icons8.com/color/100/ai.png',
+        createdAt: new Date().toISOString(),
+      }
+    ]);
+  }
+  try {
+    readFileSync(VIDEOS_PATH);
+  } catch (e) {
+    writeJson(VIDEOS_PATH, [
+      {
+        id: 'v001',
+        iaId: 'openclaw-01',
+        title: 'Como o OpenClaw cria planilhas automaticamente',
+        description: 'Veja como o OpenClaw consulta web, cria planilhas e as salva no seu computador.',
+        thumbnailUrl: 'https://img.icons8.com/flat/100/video.png',
+        videoUrl: 'https://example.com/openclaw-sheet-demo.mp4', // PLACEHOLDER
+      }
+    ]);
+  }
+}
+
+// ROTAS
+
+export default function (app) {
+  // Profiles
+  app.get('/ia-profiles', (req, res) => {
+    const profiles = readJson(PROFILES_PATH);
+    res.json(profiles);
+  });
+
+  app.get('/ia-profiles/:id', (req, res) => {
+    const { id } = req.params;
+    const profiles = readJson(PROFILES_PATH);
+    const profile = profiles.find(p => p.id === id);
+    if (!profile) return res.status(404).json({ error: 'IA não encontrada' });
+    res.json(profile);
+  });
+
+  // Videos
+  app.get('/ia-videos', (req, res) => {
+    const { iaId } = req.query;
+    const videos = readJson(VIDEOS_PATH);
+    const filtered = videos.filter(v => v.iaId === iaId);
+    res.json(filtered);
+  });
+
+  // Etapa 2 – Missões de IA (backend skeleton)
+  app.get('/ia-missions', (req, res) => {
+    const { iaId, userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId é obrigatório' });
+    }
+
+    // Em produção, isso vem de IA; aqui, exemplo fixo
+    const missions = [
+      {
+        id: 'm1',
+        title: 'Missão 1: Copiar e colar o script',
+        description: 'Copie o script que a IA mostra e rode no seu PC.',
+        content: 'python openclaw-agent.py --task first-demo',
+        requirements: ['Python instalado'],
+        status: 'todo',
+      },
+      {
+        id: 'm2',
+        title: 'Missão 2: Executar um exemplo em Python',
+        description: 'Veja o script sendo executado e entenda o que acontece.',
+        content: 'Simular execução: python openclaw-agent.py --task execute-demo',
+        requirements: ['Executar no terminal'],
+        status: 'todo',
+      },
+      {
+        id: 'm3',
+        title: 'Missão 3: Fazer uma pequena variação',
+        description: 'Mude o script um pouco e observe o novo resultado.',
+        content: 'python openclaw-agent.py --task custom-variation --input "nova_entrada"',
+        requirements: ['Edição básica do script'],
+        status: 'todo',
+      }
+    ];
+    res.json(missions);
+  });
+}
+2.3 Dados iniciais (JSON) → crie essas pastas no Replit
+No Replit, crie dentro de backend/:
+data/ia_profiles.json:
+[
+  {
+    "id": "openclaw-01",
+    "name": "OpenClaw",
+    "type": "OpenClaw",
+    "description": "Agente de IA que roda em sua máquina e interage com APIs e sistemas externos.",
+    "avatarUrl": "https://img.icons8.com/color/100/ai.png",
+    "createdAt": "2026-04-22T00:00:00.000Z"
+  }
+]
+data/ia_videos.json:
+[
+  {
+    "id": "v001",
+    "iaId": "openclaw-01",
+    "title": "Como o OpenClaw cria planilhas automaticamente",
+    "description": "Veja como o OpenClaw consulta web, cria planilhas e as salva no seu computador.",
+    "thumbnailUrl": "https://img.icons8.com/flat/100/video.png",
+    "videoUrl": "https://example.com/openclaw-sheet-demo.mp4"
+  }
+]
+🖼️ 3. Frontend (React + Vite)
+3.0 Crie o package.json para o frontend
+No Replit, crie o arquivo raiz:
+// package.json
+{
+  "name": "meu-app-ia",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.16.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.4.5"
+  }
+}
+e o vite.config.js:
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3002,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    }
+  }
+});
+3.1 frontend/main.jsx (entry point)
+// frontend/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
+3.2 frontend/App.jsx
+// frontend/App.jsx
+import { Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import FeedPage from './pages/FeedPage';
+import IaProfilePage from './pages/IaProfilePage';
+import VideoPage from './pages/VideoPage';
+import MissionsPage from './pages/MissionsPage';
+import './index.css';
+
+export default function App() {
+  return (
+    <div className="app">
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/feed" element={<FeedPage />} />
+        <Route path="/ia/:iaId" element={<IaProfilePage />} />
+        <Route path="/video/:videoId" element={<VideoPage />} />
+        <Route path="/missions/:iaId" element={<MissionsPage />} />
+      </Routes>
+    </div>
+  );
+}
+3.3 frontend/index.css (básico)
+/* frontend/index.css */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto';
+  background: #f5f5f5;
+}
+.app { min-height: 100vh; }
+3.4 Componentes
+3.4.1 frontend/components/IaCard.jsx
+// frontend/components/IaCard.jsx
+import { Link } from 'react-router-dom';
+
+export default function IaCard({ ia }) {
+  return (
+    <Link to={`/ia/${ia.id}`} className="ia-card">
+      <img src={ia.avatarUrl} alt={ia.name} />
+      <h3>{ia.name}</h3>
+      <p><strong>Tipo:</strong> {ia.type}</p>
+      <p>{ia.description.substring(0, 120)}...</p>
+    </Link>
+  );
+}
+
+<style jsx>{`
+  .ia-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #000;
+    background: #fff;
+  }
+  .ia-card img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+`}</style>
+3.4.2 frontend/components/VideoCard.jsx
+// frontend/components/VideoCard.jsx
+import { Link } from 'react-router-dom';
+
+export default function VideoCard({ video }) {
+  return (
+    <Link to={`/video/${video.id}`} className="video-card">
+      <img src={video.thumbnailUrl} alt={video.title} />
+      <h3>{video.title}</h3>
+      <p>{video.description.substring(0, 100)}...</p>
+    </Link>
+  );
+}
+
+<style jsx>{`
+  .video-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #000;
+    background: #fff;
+  }
+  .video-card img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+`}</style>
+3.5 Páginas
+3.5.1 frontend/pages/LoginPage.jsx
+// frontend/pages/LoginPage.jsx
+import { useNavigate } from 'react-router-dom';
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    // em produção: faz login real; aqui, só vai pra /feed
+    navigate('/feed');
+  }
+
+  return (
+    <div className="login-page">
+      <h1>Bem-vindo ao Telecurso de IAs</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Email</label>
+          <input type="email" required />
+        </div>
+        <div>
+          <label>Senha</label>
+          <input type="password" required />
+        </div>
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
+  );
+}
+3.5.2 frontend/pages/FeedPage.jsx
+// frontend/pages/FeedPage.jsx
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import IaCard from '../components/IaCard';
+
+export default function FeedPage() {
+  const [ias, setIas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/ia-profiles')
+      .then(res => res.json())
+      .then(setIas)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Carregando IAs...</p>;
+
+  return (
+    <div className="feed-page">
+      <h1>Feed de IAs</h1>
+      <div className="ia-list">
+        {ias.length === 0 ? (
+          <p>Nenhuma IA cadastrada ainda.</p>
+        ) : (
+          ias.map(ia => <IaCard key={ia.id} ia={ia} />)
+        )}
+      </div>
+      <p><Link to="/">Voltar</Link></p>
+    </div>
+  );
+}
+3.5.3 frontend/pages/IaProfilePage.jsx
+// frontend/pages/IaProfilePage.jsx
+import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import VideoCard from '../components/VideoCard';
+
+export default function IaProfilePage() {
+  const { iaId } = useParams();
+  const [ia, setIa] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/ia-profiles/${iaId}`).then(res => res.json()),
+      fetch(`/api/ia-videos?iaId=${iaId}`).then(res => res.json())
+    ]).then(([profile, vids]) => {
+      setIa(profile);
+      setVideos(vids);
+    }).finally(() => setLoading(false));
+  }, [iaId]);
+
+  if (loading) return <p>Carregando...</p>;
+  if (!ia) return <p>IA não encontrada.</p>;
+
+  return (
+    <div className="ia-profile-page">
+      <h1>{ia.name} ({ia.type})</h1>
+      <p>{ia.description}</p>
+      <p>Desde: {new Date(ia.createdAt).toLocaleDateString()}</p>
+
+      <h2>Vídeos Tutoriais</h2>
+      <div className="video-grid">
+        {videos.length === 0 ? (
+          <p>Nenhum vídeo ainda.</p>
+        ) : (
+          videos.map(video => <VideoCard key={video.id} video={video} />)
+        )}
+      </div>
+
+      <p><Link to="/feed">Voltar para o Feed</Link></p>
+      <p><Link to={`/missions/${iaId}`}>Aprender a usar {ia.name}</Link></p>
+    </div>
+  );
+}
+3.5.4 frontend/pages/VideoPage.jsx
+// frontend/pages/VideoPage.jsx
+import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+
+export default function VideoPage() {
+  const { videoId } = useParams();
+  const [video, setVideo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // simula busca por todos os vídeos e filtra por id
+    fetch(`/api/ia-videos`)
+      .then(res => res.json())
+      .then(videos => {
+        const v = videos.find(v => v.id === videoId);
+        setVideo(v || null);
+      })
+      .finally(() => setLoading(false));
+  }, [videoId]);
+
+  if (loading) return <p>Carregando vídeo...</p>;
+  if (!video) return <p>Vídeo não encontrado.</p>;
+
+  return (
+    <div className="video-page">
+      <h1>{video.title}</h1>
+      <p>{video.description}</p>
+      <p><strong>IA:</strong> {video.iaId}</p>
+
+      <div className="video-player">
+        {/* Em produção, você coloca um player real */}
+        <p><strong>URL do vídeo:</strong> {video.videoUrl}</p>
+      </div>
+
+      <p><Link to={`/ia/${video.iaId}`}>Voltar ao perfil</Link></p>
+    </div>
+  );
+}
+3.6 Etapa 2 – Missões de IA (frontend + backend já está acima)
