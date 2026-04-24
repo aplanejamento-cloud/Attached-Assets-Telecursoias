@@ -16,27 +16,31 @@ import RelogioFimProfissoes from "./pages/RelogioFimProfissoes";
 import Projetos from "./pages/Projetos";
 import Cryptos from "./pages/Cryptos";
 
+import { AppLayout } from "@/components/layout/AppLayout";
+
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter>
-          <Switch>
-            <Route path="/" component={LoginPage} />
-            <Route path="/feed" component={FeedPage} />
-            <Route path="/ia/:iaId" component={IaProfilePage} />
-            <Route path="/video/:videoId" component={VideoPage} />
-            <Route path="/missions/:iaId" component={MissionsPage} />
-            <Route path="/profissoes" component={Profissoes} />
-            <Route path="/hobbies" component={Hobbies} />
-            <Route path="/relogio-fim-profissoes" component={RelogioFimProfissoes} />
-            <Route path="/projetos" component={Projetos} />
-            <Route path="/cryptos" component={Cryptos} />
-            <Route component={NotFound} />
-          </Switch>
-        </WouterRouter>
+        <AppLayout>
+          <WouterRouter>
+            <Switch>
+              <Route path="/" component={LoginPage} />
+              <Route path="/feed" component={FeedPage} />
+              <Route path="/ia/:iaId" component={IaProfilePage} />
+              <Route path="/video/:videoId" component={VideoPage} />
+              <Route path="/missions/:iaId" component={MissionsPage} />
+              <Route path="/profissoes" component={Profissoes} />
+              <Route path="/hobbies" component={Hobbies} />
+              <Route path="/relogio-fim-profissoes" component={RelogioFimProfissoes} />
+              <Route path="/projetos" component={Projetos} />
+              <Route path="/cryptos" component={Cryptos} />
+              <Route component={NotFound} />
+            </Switch>
+          </WouterRouter>
+        </AppLayout>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
