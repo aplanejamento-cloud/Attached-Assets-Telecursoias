@@ -1,0 +1,21 @@
+import React, { useState, useEffect } from "react";
+import { useLocation, useParams } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface Video {
+  id: string;
+  titulo: string;
+  descricao: string;
+  urlVideo: string;
+  urlThumbnail?: string;
+}
+
+interface ProfileData {
+  nome: string;
+  bio: string;
+  videos: Video[];
+}
+
+const IaProfile = (
